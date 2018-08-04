@@ -1,0 +1,12 @@
+data/
+venv/
+
+# Pycharm
+.idea/
+__pycache__/
+.pytest_cache
+
+# Rstudio
+.Rproj.user
+*.Rproj
+.Rhistory

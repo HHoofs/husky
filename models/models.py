@@ -1,15 +1,18 @@
 from keras import losses, optimizers
+from keras.layers import Flatten, Dense
 
 
 class PretrainedDecoderRawEncoderUnet():
-    def __init__(self, img_size):
+    def __init__(self, img_size, classification, skip_connections):
         self.img_size = img_size
+        self.classification = classification
+        self.skip_connections = skip_connections
         self.neural_net = None
-        self.decoder_layers = None
+        self.encoder_layers = None
 
     def freeze_decoder_blocks(self, depth=None):
-        sorted_shapes = sorted({attributes[1][1:3] for attributes in self.decoder_layers})
-        for name, shape, index  in self.decoder_layers:
+        sorted_shapes = sorted({attributes[1][1:3] for attributes in self.encoder_layers})
+        for name, shape, index  in self.encoder_layers:
             if shape in sorted_shapes[depth:]:
                 self.neural_net.layers[index].trainable = False
                 if name:
@@ -29,4 +32,8 @@ class PretrainedDecoderRawEncoderUnet():
     def store_model(self, path):
         self.neural_net.save(path)
 
-
+    def _add_classification_branch(self, encoder):
+        classification = Flatten(name='flatten')(encoder.output)
+        classification = Dense(2048, activation='relu', name='fc1')(classification)
+        res_classification = Dense(1, activation='sigmoid', name='classification')(classification)
+        return res_classification

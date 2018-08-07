@@ -4,7 +4,6 @@ import numpy as np
 
 from .utils import crop_mask_and_image, masks_as_image, read_img_to_array
 
-
 class AddShips():
     def __init__(self, img_encoding, filled_ids):
         self.img_encoding = img_encoding

@@ -2,7 +2,6 @@ from models import inception_v3_unet, vgg16_unet
 import collections
 import random
 
-import matplotlib.pyplot as plt
 import numpy as np
 import csv
 import os

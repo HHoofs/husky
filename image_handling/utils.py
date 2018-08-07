@@ -54,3 +54,8 @@ def random_crop_image_and_mask(image, mask, size):
 
     return image[x_start:(x_start+size[0]), y_start:(y_start+size[1]), :], \
            mask[x_start:(x_start+size[0]), y_start:(y_start+size[1]), :]
+
+
+def normalize(array):
+    array *= 255.0 / array.max()
+    return array

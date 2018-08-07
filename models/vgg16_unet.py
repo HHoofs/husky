@@ -1,36 +1,63 @@
-import keras
-import keras.backend as K
-import numpy as np
-from keras import models, Input, Model
-from keras.layers import Conv2D, BatchNormalization, Activation, UpSampling2D, Dense, concatenate, MaxPooling2D, \
-    Concatenate, AveragePooling2D, Cropping2D, Flatten
+from keras import Input, Model
+from keras.layers import Conv2D, UpSampling2D, concatenate
 from keras_applications.vgg16 import VGG16
 
-def vgg16_unet(img_size=(224, 224)):
-    inp = Input(shape=(*img_size, 3), name='raw')
-    decoder = VGG16(include_top=False, input_tensor=inp)
+from .models import PretrainedDecoderRawEncoderUnet
 
-    encoder = UpSampling2D()(decoder.get_layer('block5_conv3').output)
-    encoder = concatenate([encoder, decoder.get_layer('block4_conv3').output], axis=-1)
-    encoder = Conv2D(256, (3, 3), activation='relu', padding='same')(encoder)
-    encoder = Conv2D(256, (3, 3), activation='relu', padding='same')(encoder)
 
-    encoder = UpSampling2D()(encoder)
-    encoder = concatenate([encoder, decoder.get_layer('block3_conv3').output], axis=-1)
-    encoder = Conv2D(128, (3, 3), activation='relu', padding='same')(encoder)
-    encoder = Conv2D(128, (3, 3), activation='relu', padding='same')(encoder)
+class vgg16_unet(PretrainedDecoderRawEncoderUnet):
+    def set_net(self):
+        """
+        build encoder-decoder network using the (pre-trained) VGG16 network.
 
-    encoder = UpSampling2D()(encoder)
-    encoder = concatenate([encoder, decoder.get_layer('block2_conv2').output], axis=-1)
-    encoder = Conv2D(64, (3, 3), activation='relu', padding='same')(encoder)
-    encoder = Conv2D(64, (3, 3), activation='relu', padding='same')(encoder)
+        :return: None
+        """
+        # make input tensor based on numpy array
+        inp = Input(shape=(*self.img_size, 3), name='image')
+        # pre-trained encoder (vgg16)
+        encoder = VGG16(include_top=False, input_tensor=inp)
 
-    encoder = UpSampling2D()(encoder)
-    encoder = concatenate([encoder, decoder.get_layer('block1_conv2').output], axis=-1)
-    encoder = Conv2D(32, (3, 3), activation='relu', padding='same')(encoder)
-    encoder = Conv2D(32, (3, 3), activation='relu', padding='same')(encoder)
-    res_mask = Conv2D(1, (1, 1), activation='softmax')(encoder)
+        # first decoding block
+        decoder = UpSampling2D()(encoder.get_layer('block5_conv3').output)
+        if self.skip_connections:
+            decoder = concatenate([decoder, encoder.get_layer('block4_conv3').output], axis=-1)
+        decoder = Conv2D(256, (3, 3), activation='relu', padding='same')(decoder)
+        decoder = Conv2D(256, (3, 3), activation='relu', padding='same')(decoder)
 
-    classification = Flatten(name='flatten')(decoder.output)
-    classification = Dense(4096, activation='relu', name='fc1')(classification)
-    res_classification = Dense(1, activation='sigmoid', name='predictions')(classification)
+        # second decoding block
+        decoder = UpSampling2D()(decoder)
+        if self.skip_connections:
+            decoder = concatenate([decoder, encoder.get_layer('block3_conv3').output], axis=-1)
+        decoder = Conv2D(128, (3, 3), activation='relu', padding='same')(decoder)
+        decoder = Conv2D(128, (3, 3), activation='relu', padding='same')(decoder)
+
+        # third decoding block
+        decoder = UpSampling2D()(decoder)
+        if self.skip_connections:
+            decoder = concatenate([decoder, encoder.get_layer('block2_conv2').output], axis=-1)
+        decoder = Conv2D(64, (3, 3), activation='relu', padding='same')(decoder)
+        decoder = Conv2D(64, (3, 3), activation='relu', padding='same')(decoder)
+
+        # fourth decoding block
+        decoder = UpSampling2D()(decoder)
+        if self.skip_connections:
+            decoder = concatenate([decoder, encoder.get_layer('block1_conv2').output], axis=-1)
+        decoder = Conv2D(32, (3, 3), activation='relu', padding='same')(decoder)
+        decoder = Conv2D(32, (3, 3), activation='relu', padding='same')(decoder)
+
+        # tensor with the output mask
+        res_mask = Conv2D(1, (1, 1), activation='softmax', name='mask')(decoder)
+
+        if self.classification:
+            # build result tensor based on the output of the encoder
+            res_classification = self._add_classification_branch(encoder)
+            # model for multiple outputs (including the classification)
+            model = Model([decoder], [res_mask, res_classification])
+
+        else:
+            # model for single output (only the mask)
+            model = Model([decoder], [res_mask])
+
+        # store model and meta-information regarding the layer names, shape, and index of the encoder layers
+        self.neural_net = model
+        self.encoder_layers = [(layer.name, layer.output_shape, i) for i, layer in enumerate(encoder.layers)]

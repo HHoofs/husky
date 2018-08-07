@@ -1,6 +1,9 @@
 data/
 venv/
 
+# test-images
+test/*.png
+
 # Pycharm
 .idea/
 __pycache__/

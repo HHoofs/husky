@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 from PIL import Image
+from skimage.segmentation import find_boundaries
 
 
 def read_img_to_array(sample):
@@ -26,13 +27,22 @@ def rle_decode(mask_rle, shape=(768, 768)):
     return img.reshape(shape).T  # Needed to align to RLE direction
 
 
-def masks_as_image(in_mask_list):
+def masks_as_image(in_mask_list, add_borders_array=False):
     # Take the individual ship masks and create a single mask array for all ships
     all_masks = np.zeros((768, 768), dtype = np.int16)
+    all_borders = np.zeros((768, 768), dtype = np.int16)
     #if isinstance(in_mask_list, list):
     for mask in in_mask_list:
         if isinstance(mask, str):
-            all_masks += rle_decode(mask)
+            mask = rle_decode(mask)
+            all_masks += mask
+            if add_borders_array:
+                all_borders = np.maximum(find_boundaries(mask, mode='thick').astype(int), all_borders)
+    if add_borders_array:
+        all_masks = np.where(all_borders == 1, 0, all_masks)
+
+        return np.expand_dims(all_masks, -1), np.expand_dims(all_borders, -1)
+
     return np.expand_dims(all_masks, -1)
 
 

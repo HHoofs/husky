@@ -2,7 +2,7 @@ import csv
 import os
 
 
-def read_csv_encoding(file='data/train/train_ship_segmentations.csv'):
+def read_csv_encoding(file='data/train/train_ship_segmentations.csv', length=None):
     img_encoding = dict()
     _file = file
     with open(_file, 'r') as _csv:
@@ -16,7 +16,7 @@ def read_csv_encoding(file='data/train/train_ship_segmentations.csv'):
             if len(_csv_line[1]) > 0:
                 img_encoding[sample]['class'] = 1
                 img_encoding[sample]['count'] += 1
-            if  i == 50:
+            if i == length:
                 break
     return img_encoding
 

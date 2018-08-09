@@ -57,11 +57,11 @@ class InceptionV3Unet(PretrainedDecoderRawEncoderUnet):
             # build result tensor based on the output of the encoder
             res_classification = self._add_classification_branch(encoder)
             # model for multiple outputs (including the classification)
-            model = Model([decoder], [res_mask, res_classification])
+            model = Model([inp], [res_mask, res_classification])
 
         else:
             # model for single output (only the mask)
-            model = Model([decoder], [res_mask])
+            model = Model([inp], [res_mask])
 
         # store model and meta-information regarding the layer names, shape, and index of the encoder layers
         self.neural_net = model

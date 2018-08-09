@@ -10,13 +10,14 @@ class PretrainedDecoderRawEncoderUnet():
         self.neural_net = None
         self.encoder_layers = None
 
-    def freeze_decoder_blocks(self, depth=None):
+    def freeze_encoder_blocks(self, depth=None):
         sorted_shapes = sorted({attributes[1][1:3] for attributes in self.encoder_layers})
-        for name, shape, index  in self.encoder_layers:
-            if shape in sorted_shapes[depth:]:
-                self.neural_net.layers[index].trainable = False
-                if name:
-                    assert name == self.neural_net.layers[index].name, 'name is not equal for same index'
+        for name, shape, index in self.encoder_layers:
+            if shape[1:3] in sorted_shapes[depth:]:
+                try:
+                    self.neural_net.get_layer(name).trainable = False
+                except:
+                    pass
 
     def compile(self, loss=losses.categorical_crossentropy,
                 optimizer=optimizers.Adadelta(), metrics=None):

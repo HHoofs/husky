@@ -14,37 +14,43 @@ Options:
 
 
 """
+import logging
+from time import time
+
 from docopt import docopt
 
-
 from models import inception_v3_unet, vgg16_unet
-import collections
-import random
 
-import numpy as np
-import csv
-import os
-from PIL import Image
-
+logging.basicConfig(filename='run.log', level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info(time())
 
 def main(env_var):
-    img_size = _pars_img_size(env_var)
+    logger.info(env_var)
+    img_size = _parse_img_size(env_var)
 
     if env_var['--vgg16']:
         if img_size is None:
             img_size = (224, 224)
-        model = vgg16_unet.vgg16_unet(img_size=img_size,
-                                      classification=env_var['--Classification'],
-                                      skip_connections=env_var['--SkipConnections'])
-        model.set_net()
-        model.freeze_encoder_blocks()
-        model.neural_net.summary()
+        model_class = vgg16_unet.VGG16Unet
 
-    if env_var['--inceptionv3']:
-        pass
+    elif env_var['--inceptionv3']:
+        if img_size is None:
+            img_size = (299, 299)
+        model_class = inception_v3_unet.InceptionV3Unet
+
+    else:
+        return None
+
+    model = model_class(img_size=img_size,
+                        classification=env_var['--Classification'],
+                        skip_connections=env_var['--SkipConnections'])
+    model.set_net()
+    model.freeze_encoder_blocks()
+    model.neural_net.summary(print_fn=logger.info)
 
 
-def _pars_img_size(env_var):
+def _parse_img_size(env_var):
     img_size = env_var['--Imagesize']
     if img_size:
         img_size = (img_size, img_size)
@@ -52,6 +58,4 @@ def _pars_img_size(env_var):
 
 
 if __name__ == '__main__':
-    env_var = docopt(__doc__)
-    print(env_var)
-    main(env_var)
+    main(docopt(__doc__))

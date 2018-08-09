@@ -1,5 +1,9 @@
+import logging
+
 from keras import losses, optimizers
 from keras.layers import Flatten, Dense
+
+logger = logging.getLogger(__name__)
 
 
 class PretrainedDecoderRawEncoderUnet():
@@ -16,8 +20,8 @@ class PretrainedDecoderRawEncoderUnet():
             if shape[1:3] in sorted_shapes[depth:]:
                 try:
                     self.neural_net.get_layer(name).trainable = False
-                except:
-                    pass
+                except ValueError:
+                    logger.info('Layer {name} is not present in final neural net'.format(name=name))
 
     def compile(self, loss=losses.categorical_crossentropy,
                 optimizer=optimizers.Adadelta(), metrics=None):
@@ -35,6 +39,6 @@ class PretrainedDecoderRawEncoderUnet():
 
     def _add_classification_branch(self, encoder):
         classification = Flatten(name='flatten')(encoder.output)
-        classification = Dense(2048, activation='relu', name='fc1')(classification)
+        classification = Dense(64, activation='relu', name='fc1')(classification)
         res_classification = Dense(1, activation='sigmoid', name='classification')(classification)
         return res_classification

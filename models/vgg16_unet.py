@@ -5,7 +5,7 @@ from keras_applications.vgg16 import VGG16
 from .models import PretrainedDecoderRawEncoderUnet
 
 
-class vgg16_unet(PretrainedDecoderRawEncoderUnet):
+class VGG16Unet(PretrainedDecoderRawEncoderUnet):
     def set_net(self):
         """
         build encoder-decoder network using the (pre-trained) VGG16 network.

@@ -21,7 +21,7 @@ from docopt import docopt
 
 from models import inception_v3_unet, vgg16_unet
 
-logging.basicConfig(filename='run.log', level=logging.INFO)
+logging.basicConfig(filename='logs/run.log', level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.info(time())
 

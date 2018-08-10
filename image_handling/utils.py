@@ -27,7 +27,7 @@ def rle_decode(mask_rle, shape=(768, 768)):
     return img.reshape(shape).T  # Needed to align to RLE direction
 
 
-def masks_as_image(in_mask_list, add_borders_array=False):
+def masks_as_image(in_mask_list, add_borders_array=False, add_background_array=False):
     # Take the individual ship masks and create a single mask array for all ships
     all_masks = np.zeros((768, 768), dtype = np.int16)
     all_borders = np.zeros((768, 768), dtype = np.int16)
@@ -38,12 +38,31 @@ def masks_as_image(in_mask_list, add_borders_array=False):
             all_masks += mask
             if add_borders_array:
                 all_borders = np.maximum(find_boundaries(mask, mode='thick').astype(int), all_borders)
+    all_masks = all_masks.astype(bool)
+
+    if not add_borders_array and not add_background_array:
+        return np.expand_dims(all_masks, -1)
+
+    _output = [np.expand_dims(all_masks, -1)]
+
     if add_borders_array:
-        all_masks = np.where(all_borders == 1, 0, all_masks)
+        _output.append(np.expand_dims(all_borders.astype(bool), -1))
 
-        return np.expand_dims(all_masks, -1), np.expand_dims(all_borders, -1)
+        if add_background_array:
+            all_background = np.where(all_borders, False, True)
+            all_background = np.where(all_masks, False, all_background)
+            _output.append(np.expand_dims(all_background, -1))
 
-    return np.expand_dims(all_masks, -1)
+    return _output
+
+
+def no_overlapping_boolean_arrays(arrays):
+    for anchor in range(len(arrays)):
+        for reference in range(len(arrays)):
+            if anchor < reference:
+                arrays[anchor] = np.where(arrays[reference], False, arrays[anchor])
+
+    return arrays
 
 
 def crop_mask_and_image(mask, image):

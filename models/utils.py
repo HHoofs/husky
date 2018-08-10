@@ -1,3 +1,4 @@
+from keras.callbacks import Callback
 from keras_applications.vgg16 import preprocess_input as vgg16_pre
 from keras_applications.inception_v3 import preprocess_input as inception_v3_pre
 

@@ -23,7 +23,7 @@ class PretrainedDecoderRawEncoderUnet():
                 except ValueError:
                     logger.info('Layer {name} is not present in final neural net'.format(name=name))
 
-    def compile(self, loss=losses.categorical_crossentropy,
+    def compile(self, loss=losses.binary_crossentropy,
                 optimizer=optimizers.Adadelta(), metrics=None):
         self.neural_net.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 

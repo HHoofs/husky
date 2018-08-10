@@ -7,10 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 class PretrainedDecoderRawEncoderUnet():
-    def __init__(self, img_size, classification, skip_connections):
+    def __init__(self, img_size, classification, skip_connections, mask_channels=1):
         self.img_size = img_size
         self.classification = classification
         self.skip_connections = skip_connections
+        self.mask_channels = mask_channels
         self.neural_net = None
         self.encoder_layers = None
 

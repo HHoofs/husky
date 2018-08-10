@@ -51,7 +51,7 @@ class InceptionV3Unet(PretrainedDecoderRawEncoderUnet):
         decoder = conv_block(decoder, 64)
 
         # tensor with the output mask
-        res_mask = Conv2D(1, (1, 1), activation='softmax', name='mask')(decoder)
+        res_mask = Conv2D(self.mask_channels, (1, 1), activation='softmax', name='mask')(decoder)
 
         if self.classification:
             # build result tensor based on the output of the encoder

@@ -46,7 +46,7 @@ class VGG16Unet(PretrainedDecoderRawEncoderUnet):
         decoder = Conv2D(32, (3, 3), activation='relu', padding='same')(decoder)
 
         # tensor with the output mask
-        res_mask = Conv2D(3, (1, 1), activation='softmax', name='mask')(decoder)
+        res_mask = Conv2D(self.mask_channels, (1, 1), activation='softmax', name='mask')(decoder)
 
         if self.classification:
             # build result tensor based on the output of the encoder

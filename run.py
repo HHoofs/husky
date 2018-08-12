@@ -1,7 +1,7 @@
 """Husky
 
 Usage:
-    run.py (--VGG16|--InceptionV3) (--Binary|--Categorical) [-i <float>] [-cs] [-T] [-e <float>]
+    run.py (--VGG16|--InceptionV3) (--Binary|--Categorical) [-i <float>] [-cs] [-T] [-e <float>] [-f <float>]
 
 Options:
     -h --help                          help
@@ -13,6 +13,7 @@ Options:
     -c --Classification                add classification to the model
     -s --SkipConnections               add skip connections to the U-net model
     -e <float> --Epochs <float>        number of epochs for the training [default: 1]
+    -f <float>                         depth at which the encoder blocks are set to trainable
     -T                                 test run
 
 
@@ -36,7 +37,7 @@ logger.info(time.strftime("%Y%m%d_%H%M%S"))
 
 def main(env_var):
     logger.info(env_var)
-    img_size, epochs, mask_channels, mask_type, metric_sel, loss_sel = _parse_env_var(env_var)
+    img_size, epochs, mask_channels, mask_type, metric_sel, loss_sel, freezed_layers = _parse_env_var(env_var)
 
     if env_var['--VGG16']:
         if img_size is None:
@@ -72,7 +73,7 @@ def main(env_var):
                         skip_connections=env_var['--SkipConnections'],
                         mask_channels=mask_channels)
     model.set_net()
-    model.freeze_encoder_blocks()
+    model.freeze_encoder_blocks(depth=freezed_layers)
     model.compile(loss=loss_sel, metrics=metric_sel)
     model.neural_net.summary(print_fn=logger.info)
     model.fit(training_generator=training_gen, validation_generator=validati_gen,
@@ -124,7 +125,12 @@ def _parse_env_var(env_var):
     else:
         assert False, 'no valid mask type provided'
 
-    return img_size, epochs, mask_channels, mask_type, _metrics, _losses
+    if not env_var['-f']:
+        freezed_layers = None
+    else:
+        freezed_layers = int(env_var['-f'])
+
+    return img_size, epochs, mask_channels, mask_type, _metrics, _losses, freezed_layers
 
 
 if __name__ == '__main__':

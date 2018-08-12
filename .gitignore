@@ -1,6 +1,6 @@
 data/
 venv/
-*.log
+logs/
 
 # test-images
 test/*.png

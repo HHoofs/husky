@@ -11,11 +11,11 @@ from models.utils import select_pre_processing
 
 class DataGenerator(keras.utils.Sequence):
     # Generates data for Keras
-    def __init__(self, img_encodings, mask_type='c', path=None, batch_size=8, shuffle=True,
+    def __init__(self, ids, img_encodings, mask_type='c', path=None, batch_size=8, shuffle=True,
                  crop_dim=None, out_dim_img=(299, 299), out_dim_mask=None, classification=False,
                  encoder_model='VGG16'):
         # Initialization
-        self.list_ids = list(img_encodings.keys())
+        self.list_ids = ids
         self.path = path
         self.img_encodings = img_encodings
         self.mask_type = mask_type
@@ -71,6 +71,7 @@ class DataGenerator(keras.utils.Sequence):
                                    self.border_back_ground,
                                    self.border_back_ground)
             if self.output_channels > 1:
+                # background, mask, borders
                 y_arr = [y_arr[2], y_arr[0], y_arr[1]]
                 y_arr = no_overlapping_boolean_arrays(y_arr)
                 y_arr = np.concatenate(y_arr, -1)

@@ -32,7 +32,8 @@ from models.models import iou_calc_second, iou_calc_first
 logging.basicConfig(filename='logs/{}_run.log'.format(time.strftime("%Y%m%d_%H%M%S")),
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.info(time.strftime("%Y%m%d_%H%M%S"))
+TIME = time.strftime("%Y%m%d_%H%M%S")
+logger.info(TIME)
 
 
 def main(env_var):
@@ -56,13 +57,13 @@ def main(env_var):
 
     ids = list(image_encoding.keys())
 
-    training_gen = DataGenerator(ids=ids[:1200],
+    training_gen = DataGenerator(ids=ids[:8],
                                  img_encodings=image_encoding,
                                  mask_type=mask_type,
                                  out_dim_img=img_size,
                                  classification=env_var['--Classification'])
 
-    validati_gen = DataGenerator(ids=ids[1200:1280],
+    validati_gen = DataGenerator(ids=ids[8:16],
                                  img_encodings=image_encoding,
                                  mask_type=mask_type,
                                  out_dim_img=img_size,
@@ -77,7 +78,7 @@ def main(env_var):
     model.compile(loss=loss_sel, metrics=metric_sel)
     model.neural_net.summary(print_fn=logger.info)
     model.fit(training_generator=training_gen, validation_generator=validati_gen,
-              epochs=epochs)
+              epochs=epochs, ref=TIME)
 
     predicti_gen = DataGenerator(ids=ids[:8],
                                  img_encodings=image_encoding,

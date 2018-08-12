@@ -73,8 +73,11 @@ class DataGenerator(keras.utils.Sequence):
             if self.output_channels > 1:
                 # background, mask, borders
                 y_arr = [y_arr[2], y_arr[0], y_arr[1]]
+                ships = np.max(y_arr[1])
                 y_arr = no_overlapping_boolean_arrays(y_arr)
                 y_arr = np.concatenate(y_arr, -1)
+            else:
+                ships = np.max(y_arr)
             x_arr, y_arr = self._if_needed_crop_resize(x_arr, y_arr)
             # augment
             x_arr, y_arr = augment((x_arr, y_arr))
@@ -85,7 +88,7 @@ class DataGenerator(keras.utils.Sequence):
             _output['mask'][i] = y_arr
             # if classification - add to model
             if self.add_classification:
-                _output['classification'][i] = np.max(y_arr)
+                _output['classification'][i] = ships
 
         return _input, _output
 

@@ -1,7 +1,7 @@
 import logging
-from functools import partial
 
 from keras import losses, optimizers, backend as K
+from keras.callbacks import ReduceLROnPlateau, TensorBoard
 from keras.layers import Flatten, Dense
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,12 @@ class PretrainedDecoderRawEncoderUnet():
                 optimizer=optimizers.Adadelta(), metrics=None):
         self.neural_net.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
-    def fit(self, training_generator, validation_generator=None, epochs=None, callbacks=None, **kwargs):
+    def fit(self, training_generator, validation_generator=None, epochs=None, callbacks='default', **kwargs):
+        if callbacks is 'default':
+            lower_lear = ReduceLROnPlateau(monitor='loss', factor=.33, patience=10, verbose=0, mode='auto', cooldown=10)
+            callback_tb = TensorBoard()
+            callbacks = [lower_lear, callback_tb]
+
         self.neural_net.fit_generator(generator=training_generator, validation_data=validation_generator,
                                       epochs=epochs, callbacks=callbacks, **kwargs)
 

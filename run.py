@@ -20,6 +20,7 @@ Options:
 """
 import logging
 import time
+from random import shuffle
 
 from docopt import docopt
 from keras import losses
@@ -55,15 +56,16 @@ def main(env_var):
 
     image_encoding = read_csv_encoding(length=1280)
 
-    ids = list(image_encoding.keys())
+    # ids = image_encoding.keys()
+    ids = balanced_ids(image_encoding)
 
-    training_gen = DataGenerator(ids=ids[:8],
+    training_gen = DataGenerator(ids=ids[:640],
                                  img_encodings=image_encoding,
                                  mask_type=mask_type,
                                  out_dim_img=img_size,
                                  classification=env_var['--Classification'])
 
-    validati_gen = DataGenerator(ids=ids[8:16],
+    validati_gen = DataGenerator(ids=ids[640:680],
                                  img_encodings=image_encoding,
                                  mask_type=mask_type,
                                  out_dim_img=img_size,
@@ -88,6 +90,17 @@ def main(env_var):
                                  shuffle=False)
 
     model.predict(pred_generator=predicti_gen)
+
+
+def balanced_ids(image_encoding):
+    empty_ids, filled_ids = ids_for_each_count(image_encoding)
+    all_ids = []
+    while len(all_ids) < len(empty_ids[0]):
+        for fil_ids in filled_ids.values():
+            all_ids += fil_ids
+    ids = all_ids + empty_ids[0]
+    shuffle(ids)
+    return ids
 
 
 def _parse_env_var(env_var):

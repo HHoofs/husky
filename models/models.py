@@ -84,6 +84,7 @@ class PretrainedDecoderRawEncoderUnet():
 
     def _add_classification_branch(self, encoder):
         classification = Flatten(name='flatten')(encoder.output)
-        classification = Dense(64, activation='relu', name='fc1')(classification)
+        classification = Dense(256, activation='relu', name='fc1')(classification)
+        classification = Dense(256, activation='relu', name='fc2')(classification)
         res_classification = Dense(1, activation='sigmoid', name='classification')(classification)
         return res_classification
